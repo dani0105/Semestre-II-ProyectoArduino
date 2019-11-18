@@ -1,75 +1,137 @@
 #include <DHT.h>
+//#include <SPI.h>
+//#include <SD.h>
+
+#include "sms.h"
 #include "Adafruit_SI1145.h"// Para el sensor uv
-#include "Screen.h"
-#include <SoftwareSerial.h>
-
-#define PIN_ANALOG_RAIN_SENSOR 3  // Entrada analógica para la señal del sensor lluvia
-#define PIN_DIGITAL_RAIN_SENSOR 5  // Entrada digital para la señal del sensor de lluvia
+#include "SIM900.h"
 
 
-LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
-DHT dht(2,DHT22);
-SoftwareSerial mySerial(10, 11);
+// Definicion de Pines
+#define PIN_RAIN 2 
+#define PIN_DHT 5
+#define SIM900_POWER 9
+#define PIN_CS 4
+
+
+DHT dht(PIN_DHT,DHT22);
 Adafruit_SI1145 uv = Adafruit_SI1145();
+SMSGSM sms;
 
-Screen screen;
+//Variables globales
+boolean started=false;
 
-bool enviar = true;
+// Valores minimos y maximos para cultivo de zanahoria 
+
+byte maxTemperature = 23; // [-255,255]
+byte minTemperature = 20; // [-255,255]
+
+byte maxHumidity = 100; // [-255,255]
+byte minHumidity = 90; // [-255,255]
+
+byte maxUV; // {1,2,3,4,5,6,7,8,9,10,11,12}
+byte minUV; // {1,2,3,4,5,6,7,8,9,10,11,12}
+
+byte rain; // < 300
+
+bool sendSMS = false;
+bool raining = false;
+
+String SMS="Atencion!";
+
+String phoneNumber = "+50684527392";
+
 void setup(){
-  lcd.begin(16, 2);              // Inicializar el LCD
-  lcd.setCursor(0,0);
   Serial.begin(9600);
-  screen.printMenu(lcd); 
-   dht.begin();          //Humedad Temperatura
-   uv.begin();        //Inicializar UV
+  Serial.print("Iniciando Sistema.  ");
+  
+  // Power on SIM900 module
+  pinMode(SIM900_POWER, OUTPUT);
+  digitalWrite(SIM900_POWER, HIGH);
+  delay(500);
+  digitalWrite(SIM900_POWER, LOW);  
+  delay(5000); 
+  
+  dht.begin();          //Humedad Temperatura
+  uv.begin();        //Inicializar UV
 
-   mySerial.begin(9600);   // Setting the baud rate of GSM Module 
+  // Inicia Gsm
+  if (gsm.begin(9600)){
+    Serial.println("\nGSM=READY");
+    started=true;
+  } 
+  else 
+    Serial.println("\nGSM=IDLE");
 
-    
+/*
+  // Inicia SD Card
+  if (!SD.begin(PIN_CS)) {
+    Serial.println("Card failed, or not present");
+    //while (1);
+  }
+  Serial.println("card initialized.");
+  */
 }  
 
 void loop() {  
-  if(enviar){
-    SendMessage();
-    enviar = false;
-  }
-  if(!screen.getStart()){
-    float f = dht.readHumidity();
-    int t = (int) dht.readTemperature();
-
-    screen.startInterface(lcd,t,f);
+  if(started){
+    
+    
+    //Sensor DHT
+    float humidity  = dht.readHumidity();
+    int temperature = (int) dht.readTemperature();
+    
     // Sensor UV
-    Serial.println("-----------");
-    Serial.print("Vis: "); Serial.println(uv.readVisible());
-    Serial.print("IR: "); Serial.println(uv.readIR());
+
     
+    float vis     = uv.readVisible();
+    float ir      = uv.readIR();
     float UVindex = uv.readUV();
-    // the index is multiplied by 100 so to get the
-    // integer index, divide by 100!
-    UVindex /= 100.0;
-    Serial.print("UV: ");  Serial.println(UVindex);
-
-    int sensorValue = analogRead(PIN_ANALOG_RAIN_SENSOR); // Leer datos del puerto analógico
-   Serial.print("Lluvia analog value: "); 
-   Serial.println(sensorValue); // Salida de valor analógico al monitor de puerto
-   delay(5000);
-   
-    return;
     
-  }
+    
+    // Sensor Rain
+    int rain = analogRead(PIN_RAIN); // Leer datos del puerto analógico
 
-   screen.menuControls(lcd);
-   delay(100);
+    Serial.print("Temperatura: ");Serial.print(temperature);
+    Serial.print("\nHumedad: ");Serial.print(humidity);
+    
+    Serial.print("\nVis: ");Serial.print(vis);
+    Serial.print("\nIr: ");Serial.print(ir);
+    Serial.print("\nUVIndex: ");Serial.print(UVindex);
+    
+    Serial.print("\nLluvia: ");Serial.print(rain);
+
+    if(rain < 500)
+      raining = !raining;
+    
+    if( temperature < minTemperature || maxTemperature < temperature){
+      sendSMS = true;
+      SMS += "\nTemperaduta rompio limite establecido. Temperatura= "+String(temperature);
+    }
+
+    if(humidity < minHumidity || maxHumidity < humidity){
+      sendSMS = true;
+      SMS += "\nHumedad rompio limite establecido. Humedad= "+String(humidity)+"%";
+    }
+
+    if(sendSMS){
+      Serial.println(SMS);
+      char charBuf[SMS.length()];
+      SMS.toCharArray(charBuf, SMS.length()); 
+      sendNotification(charBuf);
+    }
+  
+    delay(10000);
+  }
 }
 
- void SendMessage()
-{
-  mySerial.println("AT+CMGF=1");    //Sets the GSM Module in Text Mode
-  delay(1000);  // Delay of 1000 milli seconds or 1 second
-  mySerial.println("AT+CMGS=\"+50684527392\"\r"); // Replace x with mobile number
-  delay(1000);
-  mySerial.println("I am SMS from GSM Module");// The SMS text you want to send
-  delay(100);
-   mySerial.println((char)26);// ASCII code of CTRL+Z
-  delay(1000);
+void sendNotification(char message){
+  Serial.println("Enviando Mensaje");
+  //sms.SendSMS("+50684527392", message);
+  Serial.println(message);
+  return;
+  for(byte i = 0; i <1; i++){
+    //LowPower.idle(180000);
+    delay(180000);
+  }
 }

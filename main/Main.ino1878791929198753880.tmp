@@ -1,0 +1,61 @@
+#include <DHT.h>
+#include "Adafruit_SI1145.h"// Para el sensor uv
+#include "sms.h"
+#include "SIM900.h"
+
+// Definicion de Pines
+#define PIN_RAIN 2 
+#define PIN_DHT 5
+#define SIM900_POWER 9
+
+
+DHT dht(PIN_DHT,DHT22);
+Adafruit_SI1145 uv = Adafruit_SI1145();
+SMSGSM sms;
+
+//Variables globales
+boolean started=false;
+
+void setup(){
+  Serial.begin(9600);
+  Serial.println("Iniciando Sistema.");
+  
+  // Power on SIM900 module
+  pinMode(SIM900_POWER, OUTPUT);
+  digitalWrite(SIM900_POWER, HIGH);
+  delay(500);
+  digitalWrite(SIM900_POWER, LOW);  
+  delay(5000); 
+  // end
+
+  
+   dht.begin();          //Humedad Temperatura
+   uv.begin();        //Inicializar UV
+  
+  if (gsm.begin(9600)){
+    Serial.println("\nstatus=READY");
+    started=true;
+  } 
+  else 
+    Serial.println("\nstatus=IDLE");
+  
+    
+}  
+
+void loop() {  
+  if(started){
+    //Sensor DHT
+    float humidity  = dht.readHumidity();
+    int temperature = (int) dht.readTemperature();
+    
+    // Sensor UV
+    
+    float vis     = uv.readVisible();
+    float ir      = uv.readIR();
+    //float UVindex = uv.readUV();
+
+    // Sensor Rain
+    int sensorValue = analogRead(PIN_RAIN); // Leer datos del puerto analógico
+    delay(5000);
+  }
+}
