@@ -1,6 +1,8 @@
 Detección de factores importantes para la optimización y manejo de cultivos a través de sensores en Arduino
 ======
-    El proyecto consiste en la implementacion de un dispositivo basado en arduino para la recoleccion y analisis de los datos, con el fin de mandar una alertar por vía SMS al dispositivo del usuario cuando se supera un limite establecido.
+    El proyecto consiste en la implementacion de un dispositivo basado en arduino\n
+    para la recoleccion y analisis de los datos, con el fin de mandar una alertar\n
+    por vía SMS al dispositivo del usuario cuando se supera un limite establecido.
 
 ### Notas de instalacion:
 - Descargar libreria DHT
