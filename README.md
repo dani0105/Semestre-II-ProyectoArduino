@@ -18,4 +18,3 @@ Este proyecto fue echo por:
  - [@YosineyMora](https://github.com/YosineyMora)
  - [@JairoPacheco](https://github.com/https://github.com/JairoPacheco)
  - [@kairack](https://github.com/kairack)
-names listed in no particular order.
