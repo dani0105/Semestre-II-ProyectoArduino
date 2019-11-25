@@ -1,0 +1,162 @@
+#include <DHT.h>
+#include <SPI.h>
+#include <SD.h>
+#include <EEPROM.h>
+#include "LowPower.h"
+
+#include "sms.h"
+#include "Adafruit_SI1145.h"// Para el sensor uv
+#include "SIM900.h"
+
+
+// Definicion de Pines
+#define PIN_RAIN 2 
+#define PIN_DHT 5
+#define SIM900_POWER 9
+#define PIN_CS 4
+
+
+DHT dht(PIN_DHT,DHT22);
+Adafruit_SI1145 uv = Adafruit_SI1145();
+SMSGSM sms;
+
+//Variables globales
+boolean started=false;
+
+bool debugON= true;
+
+// Valores minimos y maximos para cultivo de zanahoria 
+
+byte maxTemperature; // [-255,255]
+byte minTemperature; // [-255,255]
+
+byte maxHumidity; // [-255,255]
+byte minHumidity; // [-255,255]
+
+byte maxUV; // {1,2,3,4,5,6,7,8,9,10,11,12}
+
+char phoneNumber;
+
+void setup(){
+  Serial.begin(9600);
+  Serial.print("Iniciando Sistema.  ");
+  
+  // Power on SIM900 module
+  pinMode(SIM900_POWER, OUTPUT);
+  digitalWrite(SIM900_POWER, HIGH);
+  delay(500);
+  digitalWrite(SIM900_POWER, LOW);  
+  delay(5000); 
+  
+  dht.begin();          //Humedad Temperatura
+  uv.begin();        //Inicializar UV
+
+  // Inicia Gsm
+  if (!gsm.begin(9600)){
+    Serial.println("\nGSM=IDLE");
+    while (1);  
+  } 
+  else 
+    Serial.println("\nGSM=READY");
+  started=true;
+
+  // Inicia SD Card
+  if (!SD.begin(PIN_CS)) {
+    Serial.println("Card failed, or not present");
+    while (1);
+  }
+  Serial.println("card initialized.");
+
+  readGlobalVars();
+  
+}  
+
+void loop() {  
+  if(started){
+    if(phoneNumber == '1'){
+      if(analogRead(PIN_RAIN) > 300){
+        //Sensor DHT
+        float humidity  = dht.readHumidity();
+        int temperature = (int) dht.readTemperature();
+        
+       
+        delay(3000);
+  
+         // Sensor UV
+        //float vis     = uv.readVisible();
+        //float ir      = uv.readIR();
+        float UVindex = uv.readUV();
+        UVindex /= 100.0;  
+        
+        if(debugON){
+          Serial.print("\nTemperatura: ");Serial.print(temperature);
+          Serial.print("\nHumedad: ");Serial.print(humidity);
+          
+          //Serial.print("\nVis: ");Serial.print(vis);
+          //Serial.print("\nIr: ");Serial.print(ir);
+          Serial.print("\nUVIndex: ");Serial.print(UVindex);
+        }
+        
+        if( temperature < minTemperature || maxTemperature < temperature || humidity < minHumidity || maxHumidity < humidity){
+                  
+        }
+    
+        delay(3000);
+        delay(3000);
+      }
+    }else{
+    char text[100] = "uv:5\nt:20-30\nf:60-70";
+    char phone[20] = "+50684527392";
+    getParams(text,phone);
+ /*
+      char sms_position = sms.IsSMSPresent(SMS_UNREAD);
+      char text[100];
+      char phone[20];
+      if (sms_position) 
+      {
+          sms.GetSMS(sms_position, phone, text, 100);
+          getParams(text,phone);
+      }      
+      delay(2000);
+      */
+    }
+  }
+}
+
+void getParams(char text[100], char phone[20]){
+  phoneNumber = phone;
+  char var[3];
+  bool startRead;
+  for(short i = 0; 0< 100; ++i){
+    if(text[i] == ' ')
+      continue;
+    if(text[i] == ':'){
+      startRead = true;
+      continue;
+    }
+
+    if(startRead){
+      var += text[i];
+    }
+    
+  }
+}
+
+void sendNotification(char message){
+  //sms.SendSMS("+50684527392", message);
+  /*
+  for(byte i; i< 30;++i){
+     delay(30000);
+     delay(30000);
+  }
+  */
+}
+
+void readGlobalVars(){
+  phoneNumber     =  EEPROM.read(0); // Numero de telefono;
+  maxTemperature  = EEPROM.read(1); // max Temperatura
+  minTemperature  = EEPROM.read(2); // min Temperatura
+  maxUV           = EEPROM.read(3); // max UV
+  minHumidity     = EEPROM.read(4); // min Humedad
+  maxHumidity     = EEPROM.read(5); // max Humedad
+}
