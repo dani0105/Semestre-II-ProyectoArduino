@@ -25,7 +25,7 @@ bool debugON= true;
 
 // Valores minimos y maximos para cultivo de zanahoria 
 
-short maxTemperature = 32; // [-255,255]
+short maxTemperature = 33; // [-255,255]
 short minTemperature = 25; // [-255,255]
 
 short maxHumidity = 100; // [-255,255]
@@ -106,7 +106,7 @@ void loop() {
     if(UVindex > 1 || UVMin){ 
       if(analogRead(PIN_RAIN) > 300){
         //Sensor DHT
-        delay(30000);
+        delay(3000);
         float humidity  = dht.readHumidity();
         int temperature = (int) dht.readTemperature();
         
@@ -134,8 +134,9 @@ void loop() {
         }else if(UVindex > maxUV){
            sendNotification("Limite de rayos UV superado");
         }
-        delay(30000);
-        delay(30000);
+        delay(3000);
+        delay(3000);
+        return;
       }
     }
     Serial.println("Pausa de 30 minutos uv:");
