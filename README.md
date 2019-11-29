@@ -18,11 +18,13 @@ por vía SMS al dispositivo del usuario cuando se supera un límite establecido.
 
 ### Ensamblaje del prototipo
 -Colocar la tarjeta SIM en la ranura ubicada en la parte inferior del Shield GSM.
+
 **Nota**: Para facilitar el uso de la tarjeta SIM, **remueva** el PIN de desbloqueo.
 
 ![alt text](https://raw.githubusercontent.com/dani0105/Semestre-II-ProyectoArduino/master/doc/images/step1.jpg)
 
 -Colocar la antena al Shiel GSM y colocarlo sobre la placa Arduino uno
+
 **Nota**: Asegurarse que los Jumpers estén en la configuración **RXD**->**D3**, **TXD**->**D2**.
 
 ![alt text](https://raw.githubusercontent.com/dani0105/Semestre-II-ProyectoArduino/master/doc/images/step2.jpg)
@@ -51,6 +53,7 @@ pueden conectarlo donde le sirva más.
 - Libreria Adafruit_SI1145
 
 **Nota**: La libreria de GSM no es ncesaria instalar, porque se encuentra junto al codigo de este proyecto.
+
 **Nota**: En la seccion de referencias puede encontrar links donde puede descargar las librerias y material de referencia.
 
 El codigo principal de la aplicacion se encuentra en el archivo main.ino.
@@ -69,6 +72,9 @@ Este proyecto fue echo por:
 
 ### Referencias
 Libreria GSM:[https://github.com/MarcoMartines/GSM-GPRS-GPS-Shield](https://github.com/MarcoMartines/GSM-GPRS-GPS-Shield)
-Liberia DHT: []()
-Libreria Adafruit_SI1145: []()
+
+Liberia DHT: [https://github.com/adafruit/DHT-sensor-library](https://github.com/adafruit/DHT-sensor-library)
+
+Libreria Adafruit_SI1145: [https://github.com/adafruit/Adafruit_SI1145_Library](https://github.com/adafruit/Adafruit_SI1145_Library)
+
 Tutorial de como mandar y recibir mensajes por GSM: [http://educ8s.tv/arduino-gsm-shield/](http://educ8s.tv/arduino-gsm-shield/)
